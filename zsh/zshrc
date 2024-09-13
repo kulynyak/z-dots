@@ -185,7 +185,7 @@ Darwin)
   alias rm-relocated='rm $HOME/Desktop/Relocated\ Items.nosync && rm /Users/Shared/Relocated\ Items'
   alias ypwd='pwd | pbcopy'
   # dump brew packages
-  alias bbd='brew bundle dump --all --force --file=$HOME/.config/u.dots/brew/Brewfile'
+  alias bbd='brew bundle dump --all --force --file=$HOME/.config/u-dots/brew/Brewfile'
   alias lsbundleid="osascript -e \
   'on run args
   set output to {}
