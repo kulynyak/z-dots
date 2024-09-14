@@ -1,15 +1,20 @@
 #!/usr/bin/env bash
 
+# Add Homebrew to PATH if not already added
+sudo sh -c 'grep -qxF "export PATH=\"/opt/homebrew/bin:/opt/homebrew/sbin:\$PATH\"" /etc/profile || echo "export PATH=\"/opt/homebrew/bin:/opt/homebrew/sbin:\$PATH\"" >> /etc/profile'
+source /etc/profile
 # Install Homebrew (if not installed)
 if test ! "$(which brew)"; then
   echo "Installing Homebrew for you."
   # Install the correct homebrew for each OS type
   if test "$(uname)" = "Darwin"; then
-    ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" && echo "Homebrew installed"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && echo "Homebrew installed"
   fi
 fi
 
-inst_items=('alacritty' 'git' 'karabiner' 'tmux' 'zsh' 'wezterm' 'kitty')
+source /etc/profile
+
+inst_items=('git' 'karabiner' 'tmux' 'zsh' 'wezterm' 'kitty' 'bash' 'bin')
 u_dots=$PWD
 for i in "${inst_items[@]}"; do
   echo "installing $i ..."
@@ -29,16 +34,8 @@ cd hammerspoon
 ./install.sh
 echo "hammerspoon installed"
 cd "$u_dots"
-echo "installing nvim ..."
-nvim=$u_dots/nvim
-if [ ! -d "$nvim" ]; then
-  git clone git@github.com:kulynyak/nvim.git
-fi
 
-cd nvim
-/.install.sh
-echo "nvim installed"
-cd "$u_dots"
+
 echo "installing Brewfile ..."
 brew bundle --file="$u_dots/brew/Brewfile"
 echo "Brewfile installed"
