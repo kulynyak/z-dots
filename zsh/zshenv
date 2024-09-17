@@ -95,7 +95,9 @@ export PATH=".:$PATH"
 
 # Ensure path arrays do not contain duplicates.
 typeset -gU cdpath fpath mailpath path
-. "$HOME/.cargo/env"
+if [[ -d "$HOME/.cargo" ]]; then
+  . "$HOME/.cargo/env"
+fi
 
 # Docker
 DOCKER_PATH="/Applications/Docker.app/Contents/Resources/bin"

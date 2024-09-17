@@ -14,7 +14,7 @@ fi
 
 source /etc/profile
 
-inst_items=('git' 'karabiner' 'tmux' 'zsh' 'wezterm' 'kitty' 'bash' 'bin')
+inst_items=('git' 'karabiner' 'tmux' 'zsh' 'wezterm' 'bash' 'bin')
 u_dots=$PWD
 for i in "${inst_items[@]}"; do
   echo "installing $i ..."
@@ -37,5 +37,5 @@ cd "$u_dots"
 
 
 echo "installing Brewfile ..."
-brew bundle --file="$u_dots/brew/Brewfile"
+brew bundle --file="$u_dots/brew/Brewfile.clean"
 echo "Brewfile installed"

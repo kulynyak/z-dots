@@ -540,7 +540,7 @@ esac
 
 bindkey -s ^x^x " clear\n"
 
-source ~/.homebrew-token
+source ~/.config/homebrew-token
 
 eval "$(direnv hook zsh)"
 
