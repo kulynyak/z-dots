@@ -99,3 +99,4 @@ eval "$(starship init bash)"
 # export PATH="/Users/ra/.rd/bin:$PATH"
 ### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
 . "$HOME/.cargo/env"
+eval "$(atuin init bash)"
