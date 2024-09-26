@@ -1,3 +1,3 @@
 #!/bin/zsh
 
-# alias zed='zed-preview'
+alias zed='zed-preview'
