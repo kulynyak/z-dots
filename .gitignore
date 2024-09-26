@@ -7,3 +7,5 @@ automatic_backups
 nvim
 fish
 **/.DS_Store
+**/tmp/*
+**/.shellcheckrc
