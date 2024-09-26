@@ -9,20 +9,20 @@ alias vi="NVIM_APPNAME=neoLaunch nvim"
 
 # Helper function to extract NVIM_APPNAME values from aliases
 function get_nvappnames() {
-  echo "Cancel" $(alias | grep 'NVIM_APPNAME' | sed -E 's/.*NVIM_APPNAME=([^ ]*).*/\1/')
+    echo "Cancel" $(alias | grep 'NVIM_APPNAME' | sed -E 's/.*NVIM_APPNAME=([^ ]*).*/\1/')
 }
 
 function nvims() {
-  local items=($(get_nvappnames))
-  local config=$(printf "%s\n" "${items[@]}" | fzf --prompt=" Neovim Config » " --height=50% --layout=reverse --border --exit-0)
-  
-  # Handle selection for Cancel or other configs
-  if [[ $config == "Cancel" ]]; then
-    echo "Operation cancelled"
-    return 0
-  fi
+    local items=($(get_nvappnames))
+    local config=$(printf "%s\n" "${items[@]}" | fzf --prompt=" Neovim Config » " --height=50% --layout=reverse --border --exit-0)
 
-  NVIM_APPNAME=$config nvim "$@"
+    # Handle selection for Cancel or other configs
+    if [[ $config == "Cancel" ]]; then
+        echo "Operation cancelled"
+        return 0
+    fi
+
+    NVIM_APPNAME=$config nvim "$@"
 }
 
 function nvim_clean() {

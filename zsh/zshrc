@@ -1,91 +1,9 @@
+#!/bin/zsh
+
 # stop interpreting Ctrl+S as a command to pause output
 # stty -ixon
-# history wrapper
-function omz_history {
-  local clear list
-  zparseopts -E c=clear l=list
-  if [[ -n "$clear" ]]; then
-    # if -c provided, clobber the history file
-    echo -n >| "$HISTFILE"
-    fc -p "$HISTFILE"
-    echo >&2 History file deleted.
-  elif [[ -n "$list" ]]; then
-    # if -l provided, run as if calling `fc' directly
-    builtin fc "$@"
-  else
-    # unless a number is provided, show all history events (starting from 1)
-    [[ ${@[-1]-} = *[0-9]* ]] && builtin fc -l "$@" || builtin fc -l "$@" 1
-  fi
-}
-# timestamp format
-case ${HIST_STAMPS-} in
-  "mm/dd/yyyy") alias history='omz_history -f' ;;
-  "dd.mm.yyyy") alias history='omz_history -E' ;;
-  "yyyy-mm-dd") alias history='omz_history -i' ;;
-  "") alias history='omz_history' ;;
-  *) alias history="omz_history -t '$HIST_STAMPS'" ;;
-esac
-# history file configuration
-[ -z "$HISTFILE" ] && HISTFILE="$HOME/.zsh_history"
-[ "$HISTSIZE" -lt 50000 ] && HISTSIZE=50000
-[ "$SAVEHIST" -lt 10000 ] && SAVEHIST=10000
-# history command configuration
-setopt extended_history       # record timestamp of command in HISTFILE
-setopt hist_expire_dups_first # delete duplicates first when HISTFILE size exceeds HISTSIZE
-setopt hist_ignore_dups       # ignore duplicated commands history list
-setopt hist_ignore_all_dups
-setopt hist_ignore_space      # ignore commands that start with space
-setopt hist_verify            # show command with history expansion to user before running it
-setopt share_history          # share command history data
-setopt hist_find_no_dups
-setopt hist_save_no_dups
-setopt hist_beep
-HISTORY_IGNORE='(cd ..|l|l[alsh]|less|lvim|nvim|vi|vim|hx|n|nnn|x|q|exit|zreload)'
 
-setopt +o nomatch
-
-bindkey -e
-# bindkey '^R'      history-incremental-search-backward
-bindkey "^[[5~" up-line-or-history   # <Page Up>
-bindkey "^[[6~" down-line-or-history # <Page Down>
-bindkey "^[OH" beginning-of-line     # <Home> or <Fn + Left Arrow>
-bindkey "^[[H" beginning-of-line     # <Home> or <Fn + Left Arrow>
-bindkey "^[OF" end-of-line           # <End> or <Fn + Right Arrow>
-bindkey "^[[F" end-of-line           # <End> or <Fn + Right Arrow>
-bindkey '^[[1;3C' forward-word       # <Alt + Right Arrow>
-bindkey '^[[C' forward-word          # <Right Arrow>
-bindkey '^[[1;3D' backward-word      # <Alt + Left Arrow>
-bindkey '^[[D' backward-word         # <Left Arrow>
-bindkey '^[[C' forward-char          # <Right Arrow>
-bindkey '^[[D' backward-char         # <Left Arrow>
-bindkey '^?' backward-delete-char    # <Backspace> or <Delete>
-bindkey "^[[3~" delete-char          # <Delete>
-bindkey "^[3;5~" delete-char         # Special combination (review based on your setup)
-bindkey '^[[3;5~' delete-word        # <Ctrl + Fn + Delete>
-bindkey '^H' backward-delete-word    # <Ctrl + Delete>
-# space during searches
-bindkey -M isearch " " magic-space
-
-bindkey '^X' clear-screen
-
-# edit the current command line in $EDITOR
-autoload -U edit-command-line
-zle -N edit-command-line
-bindkey '^X^E' edit-command-line
-# bindkey -M menuselect " " accept-and-menu-complete
-
-autoload -U url-quote-magic
-zle -N self-insert url-quote-magic
-
-# foreground jobs
-function foreground-current-job() {
-  fg
-}
-
-zle -N foreground-current-job
-bindkey -M emacs '^z' foreground-current-job
-
-# The globbing is a little complicated here:
+# Load the compinit module, and configure it dynamically based on the .zcompdump file's age
 # - '#q' is an explicit glob qualifier that makes globbing work within zsh's [[ ]] construct.
 # - 'N' makes the glob pattern evaluate to nothing when it doesn't match (rather than throw a globbing error)
 # - '.' matches "regular files"
@@ -97,421 +15,37 @@ else
 	compinit -C;
 fi;
 
-# User specific aliases and functions
-if [ -d ~/.zshrc.d ]; then
-	for rc in ~/.zshrc.d/*; do
-		if [ -f "$rc" ]; then
-			. "$rc"
-		fi
-	done
-fi
-unset rc
+# Disable the NOMATCH option which allows non-matching patterns to be passed as-is
+setopt +o nomatch
 
-# global aliases
-globalias() {
-  if [[ $LBUFFER =~ ' [A-Z0-9]+$' ]]; then
-    zle _expand_alias
-    zle expand-word
-  fi
-  zle self-insert
+# Enable emacs keybindings in the shell
+bindkey -e
+
+source ~/.zshrc.d/_history.sh
+source ~/.zshrc.d/_edkeys.sh
+
+# Load the 'url-quote-magic' widget which performs URL quoting in the ZLE (Zsh Line Editor)
+autoload -U url-quote-magic
+
+# Redefine the self-insert function to include 'url-quote-magic' functionality
+zle -N self-insert url-quote-magic
+
+# Function to bring the most recent background job to the foreground
+# Assign the function to a keybinding for easy access
+function foreground-current-job() {
+  fg
 }
+# Attach the 'foreground-current-job' function to a zle widget
+zle -N foreground-current-job
+# Bind the function to Ctrl+Z in emacs keymap
+bindkey -M emacs '^z' foreground-current-job
 
-zle -N globalias
-bindkey " " globalias
-# control-space to bypass completion
-bindkey "^ " magic-space
-# normal space during searches
-bindkey -M isearch " " magic-space
-alias -g G='|& grep -E -i'
-alias -g L="| less"
-alias -g X='| xargs'
-alias -g X0='| xargs -0'
-alias -g C='| wc -l'
-alias -g A='| awk'
-alias -g H='| head -n $(($LINES-5))'
-alias -g T='| tail -n $(($LINES-5))'
-alias -g S='| sed'
-alias -g N='&> /dev/null'
-alias -g XC='&> xclip -i -sel c'
-# last modified(inode time) file or directory
-alias -g NF="./*(oc[1])"
-
-alias vi='$EDITOR'
-alias vim='$EDITOR'
-alias svi='sudo nvim'
-alias snano='sudo nano'
-
+alias zreload='exec zsh'
 alias x='exit'
 alias q='exit'
-alias zreload='exec zsh'
 
-alias hist='fc -l 1'
-
-alias dud='du -s *(/)' # show directories size
-
-alias rm='trash'
-
-alias ll='ls -la' # Lists in one column, hidden files.
-alias l='ls -l' # Lists in one column.
-
-alias pgrep='pgrep -f'
-
-alias pkill='pkill -9 -f'
-
-alias oport='netstat -ntlp tcp' # opened ports
-
-alias port='(){ sudo lsof -i -P | grep LISTEN | grep :$1. ;}'
-
-alias pyshare='python3 -m http.server' # share current folder
-
-alias tailf='tail -f'
-
-alias ip='ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '\''{print $2}'\'
-alias ip6='ifconfig | grep "inet6" | grep -v "fe80::" | awk '\''{print $2}'\'
-
-
-alias ipe='wget -qO - http://ipecho.net/plain; echo'
-
-# aws cred
-alias mfa='$HOME/.aws/aws_mfa_temp_developers.sh' 
-
-case "$__OS" in
-Darwin)
-  alias sed='gsed'
-  alias cat='gcat'
-  alias head='ghead'
-  alias zcat='gzcat'
-  alias rm-relocated='rm $HOME/Desktop/Relocated\ Items.nosync && rm /Users/Shared/Relocated\ Items'
-  alias ypwd='pwd | pbcopy'
-  # dump brew packages
-  alias bbd='brew bundle dump --all --force --file=$HOME/.config/u-dots/brew/Brewfile'
-  alias lsbundleid="osascript -e \
-  'on run args
-  set output to {}
-  repeat with param in args
-  set end of output to id of app param
-  end
-  set text item delimiters to linefeed
-  output as text
-  end'"
-  alias flushdns='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder'
-  function up() {
-    # about 'update brew packages'
-    brew update
-    brew upgrade
-    brew cleanup
-    ls -l $(brew --prefix)/Library/Homebrew | grep homebrew-cask |
-      awk '{print $9}' | for evil_symlink in $(cat -); do rm -v $(brew --prefix)/Library/Homebrew/$evil_symlink; done
-    brew doctor
-  }
-
-  function up-cask() {
-    # about update outdated casks
-    OUTDATED=$(brew outdated --cask --greedy --verbose|sed -E '/latest/d'|awk '{print $1}' ORS=' '|tr -d '\n')
-    # OUTDATED=$(brew outdated --cask --verbose|sed -E '/latest/d'|awk '{print $1}' ORS=' '|tr -d '\n')
-    echo "outdated: $OUTDATED"
-    [[ ! -z "$OUTDATED" ]] && brew reinstall --cask ${=OUTDATED}
-  }
-
-  function pfd {
-  # displays the current Finder.app directory.
-  osascript 2> /dev/null <<EOF
-    tell application "Finder"
-      return POSIX path of (target of first window as text)
-    end tell
-EOF
-  }
-
-  function pfs {
-    # displays the current Finder.app selection.
-    osascript 2>&1 <<EOF
-      tell application "Finder" to set the_selection to selection
-      if the_selection is not {}
-        repeat with an_item in the_selection
-          log POSIX path of (an_item as text)
-        end repeat
-      end if
-EOF
-  }
-
-  function ql {
-    # previews files in Quick Look.
-    if (( $# > 0 )); then
-      qlmanage -p "$@" &> /dev/null
-    fi
-  }
-
-  # display notification
-  alias ndone='open -g "hammerspoon://task-completed?message=Done"'
-  # say
-  alias lmk="say 'Process complete'"
-  # "Done" notification
-  alias -g D="; ndone"
-  # "Done" notification with sound
-  alias -g SD="; ndone; lmk"
-  ;;
-Fedora)  
-  ;;
-esac
-
-function lsgrep() {
-  # about 'search through directory contents with grep'
-  gls -l | grep -E -i "$*"
-
-}
-
-function quiet() {
-  # about 'what *does* this do?'
-  $* &>/dev/null &
-}
-
-function bkpf() {
-  # about 'back up file with timestamp'
-  # param 'filename'
-  local filename=$1
-  local filetime=$(date +%Y-%m-%d-%H-%M-%S)
-  cp -a "${filename}" "${filename}-${filetime}"
-}
-
-function explain() {
-  # about 'explain any bash command via mankier.com manpage API'
-  # param '1: Name of the command to explain'
-  # example '$ explain                # interactive mode. Type commands to explain in REPL'
-  # example '$ explain '"'"'cmd -o | ...'"'"' # one quoted command to explain it.'
-  if [ "$#" -eq 0 ]; then
-    while read -p "Command: " cmd; do
-      curl -Gs "https://www.mankier.com/api/explain/?cols="$(tput cols) --data-urlencode "q=$cmd"
-    done
-    echo "Bye!"
-  elif [ "$#" -eq 1 ]; then
-    curl -Gs "https://www.mankier.com/api/explain/?cols="$(tput cols) --data-urlencode "q=$1"
-  else
-    echo "Usage"
-    echo "explain                  interactive mode."
-    echo "explain 'cmd -o | ...'   one quoted command to explain it."
-  fi
-}
-
-function sshlist() {
-  # about 'list hosts defined in ssh config'
-  awk '$1 ~ /Host$/ {for (i=2; i<=NF; i++) print $i}' ~/.ssh/config
-}
-
-function colours() {
-  # about 'print colors'
-  for i in {0..255}; do
-    printf "\x1b[38;5;${i}mcolour${i}\n"
-  done
-}
-
-function catt() {
-  # about 'display whatever file is regular file or folder'
-  # param '1: target file or dir'
-  # example '$ catt ~/.zshrc'
-  for i in "$@"; do
-    if [ -d "$i" ]; then
-      ll "$i"
-    else
-      cat "$i"
-    fi
-  done
-}
-
-# fzf
-case "$__OS" in
-Darwin)
-    FZF_SHELL=$(brew --prefix)/opt/fzf/shell
-    ;;
-Fedora)
-    FZF_SHELL=/usr/share/fzf/shell
-    ;;
-esac
-# fzf auto-completion
-[[ -f "$FZF_SHELL/completion.zsh" ]] &&  source "$FZF_SHELL/completion.zsh" 2> /dev/null
-# fzf key bindings
-[[ -f "$FZF_SHELL/key-bindings.zsh" ]] && source "$FZF_SHELL/key-bindings.zsh" 2>/dev/null
-
-# ssh agent
-if (( $+commands[ssh-agent] )); then
-  # Set the path to the SSH directory.
-  _ssh_dir="$HOME/.ssh"
-  # Set the path to the environment file if not set by another module.
-  _ssh_agent_env="${_ssh_agent_env:-${XDG_CACHE_HOME:-$HOME/.cache}/ra/ssh-agent.env}"
-  # Set the path to the persistent authentication socket.
-  _ssh_agent_sock="${XDG_CACHE_HOME:-$HOME/.cache}/ra/ssh-agent.sock"
-  # Start ssh-agent if not started.
-  if [[ ! -S "$SSH_AUTH_SOCK" ]]; then
-    # Export environment variables.
-    source "$_ssh_agent_env" 2> /dev/null
-    # Start ssh-agent if not started.
-    if ! ps -U "$LOGNAME" -o pid,ucomm | grep -q -- "${SSH_AGENT_PID:--1} ssh-agent"; then
-      mkdir -p "$_ssh_agent_env:h"
-      eval "$(ssh-agent | sed '/^echo /d' | tee "$_ssh_agent_env")"
-    fi
-  fi
-  # Create a persistent SSH authentication socket.
-  if [[ -S "$SSH_AUTH_SOCK" && "$SSH_AUTH_SOCK" != "$_ssh_agent_sock" ]]; then
-    mkdir -p "$_ssh_agent_sock:h"
-    ln -sf "$SSH_AUTH_SOCK" "$_ssh_agent_sock"
-    export SSH_AUTH_SOCK="$_ssh_agent_sock"
-  fi
-  # Load identities.
-  if ssh-add -l 2>&1 | grep -q 'The agent has no identities'; then
-    # zstyle -a ':prezto:module:ssh:load' identities '_ssh_identities'
-    # ssh-add has strange requirements for running SSH_ASKPASS, so we duplicate
-    # them here. Essentially, if the other requirements are met, we redirect stdin
-    # from /dev/null in order to meet the final requirement.
-    #
-    # From ssh-add(1):
-    # If ssh-add needs a passphrase, it will read the passphrase from the current
-    # terminal if it was run from a terminal. If ssh-add does not have a terminal
-    # associated with it but DISPLAY and SSH_ASKPASS are set, it will execute the
-    # program specified by SSH_ASKPASS and open an X11 window to read the
-    # passphrase.
-    if [[ -n "$DISPLAY" && -x "$SSH_ASKPASS" ]]; then
-      ssh-add ${_ssh_identities:+$_ssh_dir/${^_ssh_identities[@]}} < /dev/null 2> /dev/null
-    else
-      ssh-add ${_ssh_identities:+$_ssh_dir/${^_ssh_identities[@]}} 2> /dev/null
-    fi
-  fi
-  # Clean up.
-  unset _ssh_{dir,identities} _ssh_agent_{env,sock}
-fi
-
-case "$__OS" in
-Darwin)
-    ZSH_STUFF=$(brew --prefix)/share
-    ;;
-Fedora)
-    ZSH_STUFF=/usr/share
-    ;;
-esac
-# syntax highliting
-[[ -f "$ZSH_STUFF/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]] && source $ZSH_STUFF/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-
-# zsh autosuggestions
-[[ -f "$ZSH_STUFF/zsh-autosuggestions/zsh-autosuggestions.zsh" ]] && source $ZSH_STUFF/zsh-autosuggestions/zsh-autosuggestions.zsh || return 1
-
-# set highlight color, default 'fg=8'.
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
-# key bindings
-if [[ -n "$key_info" ]]; then
-  # vi
-  bindkey -M viins "$key_info[Control]F" vi-forward-word
-  bindkey -M viins "$key_info[Control]E" vi-add-eol
-fi
-
-# zsh history substring search
-[[ -f "$ZSH_STUFF/zsh-history-substring-search/zsh-history-substring-search.zsh" ]] && source $ZSH_STUFF/zsh-history-substring-search/zsh-history-substring-search.zsh
-# key bindings
-bindkey '^[[A' history-substring-search-up
-bindkey '^[[B' history-substring-search-down
-
-# z.lua
-
-# Define ENABLE_Z_LUA at the beginning of your script, setting it to 1 enables the script
-ENABLE_Z_LUA=0
-if [ "$ENABLE_Z_LUA" -eq 1 ]; then
-    case "$__OS" in
-    Darwin)
-        export Z_LUA_BIN="$(brew --prefix z.lua)/share/z.lua/z.lua"
-        ;;
-    Fedora)
-        export Z_LUA_BIN="$HOME/.local/opt/z.lua/z.lua"
-        ;;
-    esac
-
-    if [ -f $Z_LUA_BIN ] ; then
-      export _ZL_DATA=$HOME/.local/share/zlua
-      export _ZL_ADD_ONCE=1
-      eval "$(lua $Z_LUA_BIN --init zsh)"
-      alias j='z -i'
-      alias jf='z -I'
-      alias zz='z -c'      # restrict matches to subdirs of $PWD
-      alias zi='z -i'      # cd with interactive selection
-      alias zf='z -I'      # use fzf to select in multiple matches
-      alias zb='z -b'      # quickly cd to the parent directory
-    fi
-fi
-ENABLE_ZOXIDE=1
-if [ "$ENABLE_ZOXIDE" -eq 1 ]; then
-  eval "$(zoxide init zsh)"
-fi
-
-# aliases
-# cat .gitconfig
-alias cgc='cat ~/.gitconfig'
-# open (in vim) all modified files in a git repository
-alias gvm="git status --porcelain 2>/dev/null | sed -ne 's/^ M //p' | xargs vi"
-# gl - git commit browser
-unalias gl 2>/dev/null
-gl() {
-  git log --graph --color=always \
-    --format="%C(auto)%h%d %s %C(black)%C(bold)%cr" "$@" |
-    fzf --ansi --no-sort --reverse --tiebreak=index --toggle-sort=\` \
-      --bind "ctrl-m:execute:
-                echo '{}' | grep -o '[a-f0-9]\{7\}' | head -1 |
-                xargs -I % sh -c 'git show --color=always % | less -R'"
-}
-
-if (( $+commands[fzf] )); then
-  isGitRepo() {
-    if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-      return 0
-    else
-      return 1
-    fi
-  }
-  fbx() {
-    if ! isGitRepo; then
-      echo "Not a git repository"
-      return
-    fi
-    local branchList nBranch nBranchName oBranchName stashName swCmd
-    branchList=$(git branch -a)
-    oBranchName=$(echo "$branchList" | grep \* | sed 's/ *\* *//g')
-    nBranch=$(echo "$branchList" | fzf-tmux -d30 -- -x --select-1 --exit-0 | sed 's/ *//')
-    zle reset-prompt
-    [[ -n "${nBranch}" ]] || return
-    if [[ $nBranch =~ 'origin' ]]; then
-      nBranchName=$(echo "$nBranch" | sed "s/.*origin\///")
-      swCmd="git checkout -b $nBranchName $nBranch"
-    else
-      nBranchName=$(echo "$nBranch" | sed "s/.* //")
-      swCmd="git checkout $nBranchName"
-    fi
-    [[ $nBranchName != $oBranchName ]] || return
-    stashName=$(git stash list | grep -m 1 "On .*: ==${oBranchName}==" | sed -E "s/(stash@\{.*\}): .*/\1/g")
-    [[ -n "${stashName}" ]] && git stash drop "${stashName}"
-    git stash save "==${oBranchName}==" 2>/dev/null
-    eval $swCmd
-    stashName=$(git stash list | grep -m 1 "On .*: ==${nBranchName}==" | sed -E "s/(stash@\{.*\}): .*/\1/g")
-    [[ -n "${stashName}" ]] && git stash apply "${stashName}"
-    zle reset-prompt
-  }
-  zle -N fbx
-  bindkey '^x^b' fbx # checkout git branch + stash/unstash named changes (ctrl+x,ctrl+b)
-  fb() {
-    if ! isGitRepo; then
-      echo "Not a git repository"
-      return
-    fi
-    local branches branch
-    branches=$(git branch -a)
-    branch=$(echo "$branches" | fzf-tmux -d30 -- -x --query="$*" --select-1 --exit-0 | sed 's/ *//')
-    if [[ $branch =~ 'origin' ]]; then
-      git checkout -b $(echo "$branch" | sed "s/.*origin\///") $branch
-    else
-      git checkout $(echo "$branch" | sed "s/.* //")
-    fi
-    zle reset-prompt
-  }
-  zle -N fb
-  bindkey '^x^g' fb # checkout git branch (ctrl+x,ctrl+g)
-fi
-
-# add sudo before command with esc+esc
 function prepend-sudo() {
+  # about 'add sudo before the current command or remove it if already present'
   [[ -z $BUFFER ]] && zle up-history
   if [[ $BUFFER == sudo\ * ]]; then
     LBUFFER="${LBUFFER#sudo }"
@@ -520,42 +54,36 @@ function prepend-sudo() {
   fi
 }
 zle -N prepend-sudo
-# defined shortcut keys: [Esc] [Esc] disabled conflicts with AstroNvim
-# bindkey "\e\e" prepend-sudo
+# add sudo before command with esc+esc
+# defined shortcut keys: [Esc][Esc] conflicts with AstroNvim
+bindkey "\e\e" prepend-sudo
 
-alias chromed='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222&'
+# User specific aliases and functions
+if [ -d ~/.zshrc.d ]; then
+	for rc in ~/.zshrc.d/*; do
+		if [ -f "$rc" ]; then
+			source "$rc"
+		fi
+	done
+fi
+unset rc
 
+function quiet() {
+  # about 'what *does* this do?'
+  $* &>/dev/null &
+}
 
+export PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig:$PKG_CONFIG_PATH"
 
-case "$__OS" in
-Darwin)
-    ASDF_LIB="$(brew --prefix asdf)/libexec"
-    ;;
-Fedora)
-    ASDF_LIB="$HOME/.asdf"
-    ;;
-esac
-[[ -d $ASDF_LIB ]] && source "$ASDF_LIB/asdf.sh"
+# User specific aliases and functions
+if [ -d ~/.zshrc.d ]; then
+	for rc in ~/.zshrc.d/*; do
+		if [ -f "$rc" ] && [[ $(basename "$rc") != _* ]]; then
+			source "$rc"
+		fi
+	done
+fi
+unset rc
 
-
-bindkey -s ^x^x " clear\n"
-
-source ~/.config/homebrew-token
-
-eval "$(direnv hook zsh)"
-
-
-# last line
-eval "$(starship init zsh)"
-
-
-export PATH="/opt/homebrew/opt/pcsc-lite/bin:$PATH"
-export PATH="/opt/homebrew/opt/pcsc-lite/sbin:$PATH"
-export LDFLAGS="-L/opt/homebrew/opt/pcsc-lite/lib"
-
-export PKG_CONFIG_PATH="/usr/local/opt/libffi/lib/pkgconfig:/usr/local/opt/libxml2/lib/pkgconfig:$PKG_CONFIG_PATH"
-export GI_TYPELIB_PATH="/usr/local/lib/girepository-1.0:$GI_TYPELIB_PATH"
-export PKG_CONFIG_PATH="/opt/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH"
-export GI_TYPELIB_PATH="/opt/homebrew/lib/girepository-1.0:$GI_TYPELIB_PATH"
-export PATH="/opt/homebrew/bin:$PATH"
-eval "$(atuin init zsh)"
+export PATH=".:$PATH"
+source ~/.zshrc.d/_starship.sh
