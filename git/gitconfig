@@ -113,3 +113,5 @@ v = !$EDITOR $(git diff --name-only)
 	defaultBranch = main
 [url "git@gitlab.com:"]
 	insteadOf = https://gitlab.com/
+[pull]
+	rebase = true
