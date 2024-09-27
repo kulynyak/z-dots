@@ -16,9 +16,13 @@ function up-brew() {
 
 function up-cask() {
   # about 'This function updates outdated casks, excluding the ones that are already at their latest version'
-  OUTDATED=$(brew outdated --cask --greedy --verbose | sed -E '/latest/d' | awk '{print $1}' ORS=' ' | tr -d '\n')
-  [[ -n "$OUTDATED" ]] && echo "outdated: $OUTDATED"
-  [[ -n "$OUTDATED" ]] && brew reinstall --cask $OUTDATED
+  OUTDATED=$(brew outdated --cask --greedy --verbose | sed -E '/latest/d' | awk '{print $1}')
+  if [[ -n "$OUTDATED" ]]; then
+    echo "outdated: $OUTDATED"
+    while IFS= read -r cask; do
+      brew reinstall --cask "$cask"
+    done <<< "$OUTDATED"
+  fi
 }
 
 function up() {
