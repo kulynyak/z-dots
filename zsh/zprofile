@@ -12,7 +12,14 @@ export __OS
 
 case "$__OS" in
 Darwin)
-  HOMEBREW_PREFIX=$(brew --prefix)
+  if [ -d "/opt/homebrew" ]; then
+    HOMEBREW_PREFIX="/opt/homebrew"  # Apple Silicon (M1, M2, M3)
+  elif [ -d "/usr/local/Homebrew" ]; then
+    HOMEBREW_PREFIX="/usr/local"  # Intel
+  else
+    echo "Homebrew not found."
+  fi
+
   # Ensure PATH includes $HOMEBREW_PREFIX/bin and $HOMEBREW_PREFIX/sbin in /etc/profile
   grep -qF 'export PATH="$HOMEBREW_PREFIX/bin:$HOMEBREW_PREFIX/sbin:$PATH"' /etc/profile || { echo 'export PATH="$HOMEBREW_PREFIX/bin:$HOMEBREW_PREFIX/sbin:$PATH"' | sudo tee -a /etc/profile > /dev/null && source /etc/profile; }
   # Ensure LIBRARY_PATH includes $HOMEBREW_PREFIX/lib in /etc/profile
