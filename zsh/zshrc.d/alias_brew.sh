@@ -20,7 +20,7 @@ function up-cask() {
   if [[ -n "$OUTDATED" ]]; then
     echo "outdated: $OUTDATED"
     while IFS= read -r cask; do
-      brew reinstall --cask "$cask"
+      brew reinstall --cask "${cask%% *}"
     done <<< "$OUTDATED"
   fi
 }
