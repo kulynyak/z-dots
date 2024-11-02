@@ -93,4 +93,6 @@ fi
 unset rc
 
 export PATH=".:$PATH"
+source ~/.zshrc.d/_fzf.sh
+source ~/.zshrc.d/_atuin.sh
 source ~/.zshrc.d/_starship.sh

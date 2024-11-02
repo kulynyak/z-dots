@@ -167,6 +167,7 @@
                     },
                     {
                         "description": "Post Control_R if Command_R is pressed",
+                        "enabled": false,
                         "manipulators": [
                             {
                                 "from": {

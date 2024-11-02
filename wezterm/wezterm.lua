@@ -2,18 +2,24 @@ local wezterm = require("wezterm")
 
 wezterm.log_info("Config file " .. wezterm.config_file)
 
-wezterm.on("format-window-title", function(tab, pane, tabs, panes, config)
-	local zoomed = ""
-	if tab.active_pane.is_zoomed then
-		zoomed = "[Z] "
-	end
-	local index = ""
-	if #tabs > 1 then
-		index = string.format("[%d/%d] ", tab.tab_index + 1, #tabs)
-	end
+-- wezterm.on("format-window-title", function(tab, pane, tabs, panes, config)
+-- 	local zoomed = ""
+-- 	if tab.active_pane.is_zoomed then
+-- 		zoomed = "[Z] "
+-- 	end
+-- 	local index = ""
+-- 	if #tabs > 1 then
+-- 		index = string.format("[%d/%d] ", tab.tab_index + 1, #tabs)
+-- 	end
 
-	return zoomed .. index .. tab.active_pane.title
-end)
+-- 	return zoomed .. index .. tab.active_pane.title
+-- end)
+
+-- wezterm.on('format-tab-title', function(tab, tabs, panes, config, hover, max_width)
+--   local index = tab.tab_index + 1
+--   local process = tab.active_pane.foreground_process_name
+--   return string.format(" %d %s ", index, process)
+-- end)
 
 -- Define your light and dark color schemes
 local light_schemes = { "Catppuccin Latte" }
@@ -78,12 +84,12 @@ end)
 local window_padding = 0
 local act = wezterm.action
 return {
-	window_decorations = "RESIZE",
+	-- window_decorations = "RESIZE",
 	window_frame = {
-		border_left_width = "0.5px",
-		border_right_width = "0.5px",
-		border_bottom_height = "0.5px",
-		border_top_height = "0.5px",
+		border_left_width = "0.0px",
+		border_right_width = "0.0px",
+		border_bottom_height = "0.0px",
+		border_top_height = "0.0px",
 		border_left_color = "black",
 		border_right_color = "black",
 		border_bottom_color = "black",
@@ -95,7 +101,7 @@ return {
 		split = "#AABBAA",
 	},
 	initial_cols = 196,
-	initial_rows = 84,
+	initial_rows = 85,
 	-- Cursor settings
 	cursor_blink_rate = 800, -- Adjust this for the blinking rate (in milliseconds)
 	cursor_blink_ease_in = "Linear",
@@ -103,20 +109,20 @@ return {
 	check_for_updates = true,
 	adjust_window_size_when_changing_font_size = true,
 	font = wezterm.font_with_fallback({
-		"JetBrainsMono Nerd Font Mono",
 		"FiraCode Nerd Font Mono",
+		"JetBrainsMono Nerd Font Mono",
 		"Hack Nerd Font Mono",
 		"Fira Code",
 		"FiraMono Nerd Font Mono",
 	}),
 	font_size = 13.0,
 	-- line_height = 1.00,
-	line_height = 0.96,
+	line_height = 0.97,
 	enable_scroll_bar = false,
 	scrollback_lines = 5000,
 	front_end = "OpenGL",
 	cursor_thickness = "2px",
-	window_background_opacity = 0.95,
+	window_background_opacity = 0.90,
 	text_background_opacity = 0.90,
 	window_padding = {
 		left = window_padding,
