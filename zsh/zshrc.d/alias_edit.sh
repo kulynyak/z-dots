@@ -1,11 +1,12 @@
 #!/bin/zsh
 
-# Check if nvim is installed
 if command -v nvim >/dev/null 2>&1; then
-  export EDITOR='nvim'
-  export VISUAL='nvim'
+    editor() {
+        NVIM_APPNAME=LazyVim nvim "$@"
+    }
+    export EDITOR='editor'
+    export VISUAL='editor'
 fi
-
 # Set alias for the editor
 alias vi='$EDITOR'
 alias vim='$EDITOR'
