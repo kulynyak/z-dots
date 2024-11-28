@@ -1,5 +1,4 @@
 #!/bin/zsh
 
-CARGO_PATH="$HOME/.cargo"
-[[ -d $CARGO_PATH ]] && source "$CARGO_PATH/env"
-unset CARGO_PATH
+CARGO_ENV="$HOME/.cargo/env"
+[[ -f $CARGO_ENV ]] && source "$CARGO_ENV"
