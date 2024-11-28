@@ -6,7 +6,7 @@ if [ -f ~/.bashrc ]; then
 fi
 
 # User specific environment and startup programs
-. "$HOME/.cargo/env"
+# . "$HOME/.cargo/env"
 
 ### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
 # export PATH="/Users/ra/.rd/bin:$PATH"
