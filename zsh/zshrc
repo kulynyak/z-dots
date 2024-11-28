@@ -92,6 +92,9 @@ if [ -d ~/.zshrc.d ]; then
 fi
 unset rc
 
+# prevent strange control sequences after ssh disconnect
+stty -ixon
+
 export PATH=".:$PATH"
 source ~/.zshrc.d/_fzf.sh
 source ~/.zshrc.d/_atuin.sh
