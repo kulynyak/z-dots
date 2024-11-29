@@ -40,16 +40,7 @@ zle -N foreground-current-job
 # Bind the function to Ctrl+Z in emacs keymap
 bindkey -M emacs '^z' foreground-current-job
 
-alias zreload='exec zsh'
-alias x='exit'
-alias q='exit'
-
-function exit-shell() {
-  exit
-}
-zle -N exit-shell
-# Use Alt+Q to exit the shell
-bindkey '\eq' exit-shell  # Alt+Q
+alias zreload='exec zsh -l'
 
 function prepend-sudo() {
   # about 'add sudo before the current command or remove it if already present'
