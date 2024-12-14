@@ -251,8 +251,8 @@ return {
 	window_close_confirmation = "NeverPrompt",
 	window_decorations = "RESIZE",
 
-	window_background_opacity = 0.90,
-	text_background_opacity = 0.9,
+	window_background_opacity = 0.96,
+	text_background_opacity = 1.0,
 	macos_window_background_blur = 10,
 
 	window_frame = {
