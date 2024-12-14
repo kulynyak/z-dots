@@ -2,7 +2,6 @@
 
 alias dsize='du -s *(/)' # show directories size
 
-# check if a command exists then add alias
 alias rm='trash'
 
 alias ll='ls -la' # Lists in one column, hidden files.
