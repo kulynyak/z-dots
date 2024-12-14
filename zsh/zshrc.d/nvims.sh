@@ -6,6 +6,7 @@ alias vc="NVIM_APPNAME=NvChad nvim"
 alias va="NVIM_APPNAME=AstroNvim nvim"
 alias nc="NVIM_APPNAME=nCi nvim"
 alias vi="NVIM_APPNAME=neoLaunch nvim"
+alias vv="NVIM_APPNAME=NormalNvim nvim"
 
 # Helper function to extract NVIM_APPNAME values from aliases
 function get_nvappnames() {
